@@ -633,7 +633,7 @@ export default {
             
             // バーコードの検証
             if (!/^\d{8}$|^\d{13}$/.test(code)) {
-                document.getElementById('result').textContent = 'バーコードは8桁または13桁の数字を入力してください。';
+                document.getElementById('result').innerHTML = 'バーコードは8桁または13桁の数字を入力してください。';
                 return;
             }
             
@@ -641,10 +641,11 @@ export default {
                 // バーコードを解析
                 const analysisResult = analyzeBarcode(code);
                 
-                // 結果を表示
-                document.getElementById('result').textContent = displayResult(analysisResult);
+                // 結果を表示（改行を<br>に変換して表示）
+                const resultText = displayResult(analysisResult);
+                document.getElementById('result').innerHTML = resultText.replace(/\n/g, '<br>');
             } catch (error) {
-                document.getElementById('result').textContent = 'エラーが発生しました: ' + error.message;
+                document.getElementById('result').innerHTML = 'エラーが発生しました: ' + error.message;
                 console.error(error);
             }
         });
@@ -652,7 +653,7 @@ export default {
         // リセットボタン
         document.getElementById('resetButton').addEventListener('click', function() {
             document.getElementById('barcodeInput').value = '';
-            document.getElementById('result').textContent = '';
+            document.getElementById('result').innerHTML = '';
         });
     </script>
 </body>
