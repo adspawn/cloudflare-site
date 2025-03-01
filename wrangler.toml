@@ -1,6 +1,6 @@
 name = "barcode-battler"
 compatibility_date = "2025-03-01"
-main = "workers-site/index.js"
+main = "index.js"
 
 [site]
 bucket = "./public"
