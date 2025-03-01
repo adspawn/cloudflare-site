@@ -280,10 +280,10 @@ export default {
             
             // 30以上の場合は一般的な表現を使用
             if (abilityCode >= 30) {
-                return `特殊能力コード: ${ abilityCode }`;
+                return '特殊能力コード: ' + abilityCode;
             }
             
-            return `${ abilities[abilityCode] || '不明' } (コード: ${ abilityCode })`;
+            return (abilities[abilityCode] || '不明') + ' (コード: ' + abilityCode + ')';
         }
         
         // HP (生命力) を計算する関数
@@ -565,23 +565,23 @@ export default {
             let output = '';
             
             // バーコード情報
-            output += \`バーコード: \${result.barcode}\n\`;
-            output += \`種別: \${result.barcodeType.type}\n\n\`;
+            output += 'バーコード: ' + result.barcode + '\n';
+            output += '種別: ' + result.barcodeType.type + '\n\n';
             
             // キャラクターの場合
             if (result.entityType === 'character') {
                 output += '【キャラクター情報】\n';
-                output += \`種族: \${result.race}\n\`;
-                output += \`職業: \${result.job}\n\n\`;
+                output += '種族: ' + result.race + '\n';
+                output += '職業: ' + result.job + '\n\n';
                 
                 output += '【パラメータ】\n';
-                output += \`HP (生命力): \${result.hp}\n\`;
-                output += \`ST (攻撃力): \${result.st}\n\`;
-                output += \`DF (守備力): \${result.df}\n\`;
-                output += \`DX (素早さ): \${result.dx}（画面上には表示されません）\n\n\`;
+                output += 'HP (生命力): ' + result.hp + '\n';
+                output += 'ST (攻撃力): ' + result.st + '\n';
+                output += 'DF (守備力): ' + result.df + '\n';
+                output += 'DX (素早さ): ' + result.dx + '（画面上には表示されません）\n\n';
                 
                 output += '【特殊能力】\n';
-                output += \`\${result.specialAbility}\n\`;
+                output += result.specialAbility + '\n';
                 
                 // 魔法使いの場合、利用可能な魔法を表示
                 if (result.job === '魔法使い') {
@@ -601,26 +601,26 @@ export default {
             // アイテムの場合
             else {
                 output += '【アイテム情報】\n';
-                output += \`種別: \${result.itemType}\n\`;
-                output += \`種類: \${result.itemKind}\n\n\`;
+                output += '種別: ' + result.itemType + '\n';
+                output += '種類: ' + result.itemKind + '\n\n';
                 
                 output += '【効果】\n';
                 if (result.itemType.includes('武器')) {
-                    output += \`ST (攻撃力) 上昇値: +\${result.itemValue}\n\`;
+                    output += 'ST (攻撃力) 上昇値: +' + result.itemValue + '\n';
                 } else if (result.itemType.includes('防具')) {
-                    output += \`DF (守備力) 上昇値: +\${result.itemValue}\n\`;
+                    output += 'DF (守備力) 上昇値: +' + result.itemValue + '\n';
                 } else if (result.itemType === 'HPアップ' || result.itemType === 'HPアイテム') {
-                    output += \`HP (生命力) 上昇値: +\${result.itemValue}\n\`;
+                    output += 'HP (生命力) 上昇値: +' + result.itemValue + '\n';
                 } else if (result.itemType === 'PPアイテム') {
-                    output += \`PP (薬草) 上昇値: +\${result.itemValue}\n\`;
+                    output += 'PP (薬草) 上昇値: +' + result.itemValue + '\n';
                 } else if (result.itemType === 'MPアイテム') {
-                    output += \`MP (魔力) 上昇値: +\${result.itemValue}\n\`;
+                    output += 'MP (魔力) 上昇値: +' + result.itemValue + '\n';
                 } else if (result.itemType === '情報アイテム') {
                     output += 'C1モードでのみ効果を発揮します\n';
                 }
                 
                 output += '\n【特殊能力】\n';
-                output += \`\${result.specialAbility}\n\`;
+                output += result.specialAbility + '\n';
             }
             
             return output;
@@ -632,7 +632,7 @@ export default {
             const code = document.getElementById('barcodeInput').value.trim();
             
             // バーコードの検証
-            if (!/^\\d{8}$|^\\d{13}$/.test(code)) {
+            if (!/^\d{8}$|^\d{13}$/.test(code)) {
                 document.getElementById('result').textContent = 'バーコードは8桁または13桁の数字を入力してください。';
                 return;
             }
@@ -644,7 +644,7 @@ export default {
                 // 結果を表示
                 document.getElementById('result').textContent = displayResult(analysisResult);
             } catch (error) {
-                document.getElementById('result').textContent = \`エラーが発生しました: \${error.message}\`;
+                document.getElementById('result').textContent = 'エラーが発生しました: ' + error.message;
                 console.error(error);
             }
         });
