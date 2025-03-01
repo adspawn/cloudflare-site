@@ -4,3 +4,8 @@ main = "index.js"
 
 [site]
 bucket = "./public"
+
+# KVネームスペースの設定
+[[kv_namespaces]]
+binding = "ASSETS"
+id = "c79d8b48ec38448dab6037dc16f2e1b3"

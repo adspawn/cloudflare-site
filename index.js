@@ -6,6 +6,8 @@ export default {
         const options = {
             // シングルページアプリケーションモードを有効に
             mapRequestToAsset: serveSinglePageApp,
+            // 明示的にKVネームスペースを指定
+            ASSET_NAMESPACE: env.ASSETS
         };
 
         try {
@@ -17,6 +19,7 @@ export default {
                 ...options
             });
         } catch (e) {
+            console.error(`Error: ${e.message}`);
             // エラーの種類によって処理を分ける
             if (e.status === 404) {
                 try {
@@ -29,9 +32,11 @@ export default {
                     return await getAssetFromKV({
                         request: indexRequest,
                         env,
-                        waitUntil: ctx.waitUntil.bind(ctx)
+                        waitUntil: ctx.waitUntil.bind(ctx),
+                        ASSET_NAMESPACE: env.ASSETS
                     });
                 } catch (indexError) {
+                    console.error(`Index Error: ${indexError.message}`);
                     // index.htmlの取得にも失敗した場合
                     return new Response(`ページが見つかりませんでした。エラー詳細: ${indexError.message}`, {
                         status: 404,
