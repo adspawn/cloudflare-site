@@ -288,7 +288,7 @@ export default {
         
         // HP (生命力) を計算する関数
         function calculateHP(code, barcodeType) {
-            let tenThousands, thousands, hundreds;
+            let tenThousands = 0, thousands = 0, hundreds = 0;
             
             if (barcodeType.readingDirection === 'forward') {
                 // 前読みバーコードの場合
@@ -321,7 +321,7 @@ export default {
         
         // ST (攻撃力) を計算する関数
         function calculateST(code, barcodeType) {
-            let tenThousands, thousands, hundreds;
+            let tenThousands = 0, thousands = 0, hundreds = 0;
             
             if (barcodeType.readingDirection === 'forward') {
                 // 前読みバーコードの場合
@@ -380,7 +380,7 @@ export default {
         
         // DF (守備力) を計算する関数
         function calculateDF(code, barcodeType) {
-            let tenThousands, thousands, hundreds;
+            let tenThousands = 0, thousands = 0, hundreds = 0;
             
             if (barcodeType.readingDirection === 'forward') {
                 // 前読みバーコードの場合
@@ -565,62 +565,62 @@ export default {
             let output = '';
             
             // バーコード情報
-            output += 'バーコード: ' + result.barcode + '\n';
-            output += '種別: ' + result.barcodeType.type + '\n\n';
+            output += 'バーコード: ' + result.barcode + '\\n';
+            output += '種別: ' + result.barcodeType.type + '\\n\\n';
             
             // キャラクターの場合
             if (result.entityType === 'character') {
-                output += '【キャラクター情報】\n';
-                output += '種族: ' + result.race + '\n';
-                output += '職業: ' + result.job + '\n\n';
+                output += '【キャラクター情報】\\n';
+                output += '種族: ' + result.race + '\\n';
+                output += '職業: ' + result.job + '\\n\\n';
                 
-                output += '【パラメータ】\n';
-                output += 'HP (生命力): ' + result.hp + '\n';
-                output += 'ST (攻撃力): ' + result.st + '\n';
-                output += 'DF (守備力): ' + result.df + '\n';
-                output += 'DX (素早さ): ' + result.dx + '（画面上には表示されません）\n\n';
+                output += '【パラメータ】\\n';
+                output += 'HP (生命力): ' + result.hp + '\\n';
+                output += 'ST (攻撃力): ' + result.st + '\\n';
+                output += 'DF (守備力): ' + result.df + '\\n';
+                output += 'DX (素早さ): ' + result.dx + '（画面上には表示されません）\\n\\n';
                 
-                output += '【特殊能力】\n';
-                output += result.specialAbility + '\n';
+                output += '【特殊能力】\\n';
+                output += result.specialAbility + '\\n';
                 
                 // 魔法使いの場合、利用可能な魔法を表示
                 if (result.job === '魔法使い') {
-                    output += '\n【使用可能な魔法】\n';
-                    output += 'F0魔法「トルマ」: 相手のMPを奪う\n';
-                    output += 'F1魔法「ガンツ」: 攻撃の1.5倍のダメージ\n';
-                    output += 'F2魔法「デカンツ」: 攻撃の2倍のダメージ\n';
-                    output += 'F3魔法「リーモ」: HPを30％回復\n';
-                    output += 'F4魔法「デリーモ」: HPを50％回復\n';
-                    output += 'F5魔法「ニャーヘ」: 相手のDFを30％ダウン\n';
-                    output += 'F6魔法「カチコム」: 自分のDFを30％アップ\n';
-                    output += 'F7魔法「ヘヘンダ」: 相手のSTを30％ダウン\n';
-                    output += 'F8魔法「タフニ」: 自分のSTを30％アップ\n';
-                    output += 'F9魔法「マミロージャ」: 相手の回復を禁止\n';
+                    output += '\\n【使用可能な魔法】\\n';
+                    output += 'F0魔法「トルマ」: 相手のMPを奪う\\n';
+                    output += 'F1魔法「ガンツ」: 攻撃の1.5倍のダメージ\\n';
+                    output += 'F2魔法「デカンツ」: 攻撃の2倍のダメージ\\n';
+                    output += 'F3魔法「リーモ」: HPを30％回復\\n';
+                    output += 'F4魔法「デリーモ」: HPを50％回復\\n';
+                    output += 'F5魔法「ニャーヘ」: 相手のDFを30％ダウン\\n';
+                    output += 'F6魔法「カチコム」: 自分のDFを30％アップ\\n';
+                    output += 'F7魔法「ヘヘンダ」: 相手のSTを30％ダウン\\n';
+                    output += 'F8魔法「タフニ」: 自分のSTを30％アップ\\n';
+                    output += 'F9魔法「マミロージャ」: 相手の回復を禁止\\n';
                 }
             } 
             // アイテムの場合
             else {
-                output += '【アイテム情報】\n';
-                output += '種別: ' + result.itemType + '\n';
-                output += '種類: ' + result.itemKind + '\n\n';
+                output += '【アイテム情報】\\n';
+                output += '種別: ' + result.itemType + '\\n';
+                output += '種類: ' + result.itemKind + '\\n\\n';
                 
-                output += '【効果】\n';
+                output += '【効果】\\n';
                 if (result.itemType.includes('武器')) {
-                    output += 'ST (攻撃力) 上昇値: +' + result.itemValue + '\n';
+                    output += 'ST (攻撃力) 上昇値: +' + result.itemValue + '\\n';
                 } else if (result.itemType.includes('防具')) {
-                    output += 'DF (守備力) 上昇値: +' + result.itemValue + '\n';
+                    output += 'DF (守備力) 上昇値: +' + result.itemValue + '\\n';
                 } else if (result.itemType === 'HPアップ' || result.itemType === 'HPアイテム') {
-                    output += 'HP (生命力) 上昇値: +' + result.itemValue + '\n';
+                    output += 'HP (生命力) 上昇値: +' + result.itemValue + '\\n';
                 } else if (result.itemType === 'PPアイテム') {
-                    output += 'PP (薬草) 上昇値: +' + result.itemValue + '\n';
+                    output += 'PP (薬草) 上昇値: +' + result.itemValue + '\\n';
                 } else if (result.itemType === 'MPアイテム') {
-                    output += 'MP (魔力) 上昇値: +' + result.itemValue + '\n';
+                    output += 'MP (魔力) 上昇値: +' + result.itemValue + '\\n';
                 } else if (result.itemType === '情報アイテム') {
-                    output += 'C1モードでのみ効果を発揮します\n';
+                    output += 'C1モードでのみ効果を発揮します\\n';
                 }
                 
-                output += '\n【特殊能力】\n';
-                output += result.specialAbility + '\n';
+                output += '\\n【特殊能力】\\n';
+                output += result.specialAbility + '\\n';
             }
             
             return output;
@@ -632,7 +632,7 @@ export default {
             const code = document.getElementById('barcodeInput').value.trim();
             
             // バーコードの検証
-            if (!/^\d{8}$|^\d{13}$/.test(code)) {
+            if (!/^\\d{8}$|^\\d{13}$/.test(code)) {
                 document.getElementById('result').innerHTML = 'バーコードは8桁または13桁の数字を入力してください。';
                 return;
             }
@@ -643,7 +643,9 @@ export default {
                 
                 // 結果を表示（改行を<br>に変換して表示）
                 const resultText = displayResult(analysisResult);
-                document.getElementById('result').innerHTML = resultText.replace(/\n/g, '<br>');
+                
+                // 有効なHTMLとして表示するために、改行をHTMLの改行タグに変換
+                document.getElementById('result').innerHTML = resultText.split('\\n').join('<br>');
             } catch (error) {
                 document.getElementById('result').innerHTML = 'エラーが発生しました: ' + error.message;
                 console.error(error);
