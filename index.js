@@ -6,8 +6,8 @@ export default {
         const options = {
             // シングルページアプリケーションモードを有効に
             mapRequestToAsset: serveSinglePageApp,
-            // 明示的にKVネームスペースを指定
-            ASSET_NAMESPACE: env.ASSETS
+            // Cloudflareが自動生成したKVネームスペースを使用
+            ASSET_NAMESPACE: env.__STATIC_CONTENT
         };
 
         try {
@@ -33,7 +33,7 @@ export default {
                         request: indexRequest,
                         env,
                         waitUntil: ctx.waitUntil.bind(ctx),
-                        ASSET_NAMESPACE: env.ASSETS
+                        ASSET_NAMESPACE: env.__STATIC_CONTENT
                     });
                 } catch (indexError) {
                     console.error(`Index Error: ${indexError.message}`);
