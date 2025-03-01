@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>バーコードバトラーII 完全再現シミュレーター</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #eef;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        form {
+            max-width: 800px;
+            margin: 0 auto 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        label,
+        input,
+        button {
+            display: block;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        input {
+            font-size: 18px;
+            padding: 10px;
+        }
+
+        button {
+            font-size: 18px;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #007acc;
+            color: #fff;
+        }
+
+        button:hover {
+            background: #005fa3;
+        }
+
+        .reset-btn {
+            background: #d9534f;
+        }
+
+        .reset-btn:hover {
+            background: #c9302c;
+        }
+
+        .result {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>バーコードバトラーII 完全再現シミュレーター</h1>
+    <form id="barcodeForm">
+        <label for="barcodeInput">バーコードを入力（8桁または13桁）:</label>
+        <input type="text" id="barcodeInput" placeholder="例: 4901234567890" required>
+        <button type="submit">召喚</button>
+        <button type="button" id="resetButton" class="reset-btn">リセット</button>
+    </form>
+    <div class="result" id="result"></div>
+
+    <script>
+        // 全角数字を半角に変換
+        function sanitizeInput(str) {
+            return str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 65248));
+        }
+        // 数字文字列を1-indexed配列に変換
+        function getDigits(code) {
+            let d = [];
+            for (let i = 0; i < code.length; i++) {
+                d[i + 1] = parseInt(code.charAt(i));
+            }
+            return d;
+        }
+
+        // バーコード分類
+        function classifyBarcode(code) {
+            const d = getDigits(code);
+            if (code.length === 8) return "後読み8桁";
+            if (code.length === 13) {
+                if (d[1] === 0 || d[1] === 1) {
+                    if ([0, 1, 2, 3, 4, 9].includes(d[8])) return "前読み13通常";
+                    else if ([5, 6].includes(d[8])) {
+                        let num45 = parseInt(code.slice(3, 5));
+                        return (num45 <= 19) ? "前読み13通常" : "後読み13";
+                    }
+                    else if ([7, 8].includes(d[8])) {
+                        let num67 = parseInt(code.slice(5, 7));
+                        return (num67 <= 19) ? "前読み13通常" : "後読み13";
+                    }
+                } else if (d[1] >= 2 && d[1] <= 9) {
+                    return (d[3] === 9 && d[10] === 5) ? "前読み13特殊" : "後読み13";
+                }
+            }
+            return "不明";
+        }
+
+        // 種族判定
+        function getSpecies(digit) {
+            const mapping = ["メカ族", "アニマル族", "オーシャン族", "バード族", "ヒューマン族"];
+            return mapping[digit] || "不明";
+        }
+        // アイテム種別（後読み）
+        function getItemType_R(digit) {
+            const mapping = { 5: "武器・使い捨て", 6: "武器", 7: "防具・使い捨て", 8: "防具", 9: "HPアップ" };
+            return mapping[digit] || "不明";
+        }
+        // アイテム種別（前読み）
+        function getItemType_F(digit) {
+            if (digit === 5) return "武器・使い捨て";
+            if (digit === 6) return "武器";
+            if (digit === 7) return "防具・使い捨て";
+            if (digit === 8) return "防具";
+            if (digit === 9) return "HPアイテム/情報アイテム/PPアイテム/MPアイテム";
+            return "不明";
+        }
+
+        // 後読み8桁バーコード解析
+        function calcParameters8(code) {
+            const d = getDigits(code);
+            let params = { barcode: code, mode: "後読み8桁バーコード" };
+            if (d[8] >= 0 && d[8] <= 4) {
+                params.category = "キャラクター";
+                params.種族 = getSpecies(d[8]);
+                params.職業 = (d[1] <= 6) ? "戦士" : "魔法使い";
+                params.HP = Math.floor(d[7] / 2) * 10000 + d[6] * 1000 + d[5] * 100;
+                params.ST = ([3, 4].includes(d[6]) ? 1 : 0) * 10000 + ((d[6] + 7) % 10) * 1000 + ((d[5] + 5) % 10) * 100;
+                params.DF = ((d[5] + 7) % 10) * 1000 + ((d[4] + 7) % 10) * 100;
+                params.DX = d[6];
+                params.特殊能力 = Math.floor(d[4] / 4) * 10 + d[6];
+            } else {
+                params.category = "アイテム";
+                params.種別 = getItemType_R(d[8]);
+                params.種類 = 0;
+                if (params.種別 === "武器・使い捨て" || params.種別 === "武器") {
+                    let st千;
+                    if ([5, 6, 7, 8].includes(d[6])) st千 = 1;
+                    else if ([9, 0, 1, 2].includes(d[6])) st千 = 2;
+                    else if ([3, 4].includes(d[6])) st千 = 3;
+                    params["STアップ"] = st千 * 1000 + ((d[5] + 5) % 10) * 100;
+                } else if (params.種別 === "防具・使い捨て" || params.種別 === "防具") {
+                    let df千;
+                    if ([3, 4, 5, 6].includes(d[5])) df千 = 0;
+                    else if ([7, 8, 9, 0].includes(d[5])) df千 = 1;
+                    else if ([1, 2].includes(d[5])) df千 = 2;
+                    params["DFアップ"] = df千 * 1000 + ((d[4] + 7) % 10) * 100;
+                } else if (params.種別 === "HPアップ") {
+                    params["HPアップ"] = Math.floor(d[7] / 8) * 10000 + d[6] * 1000 + d[5] * 100;
+                }
+                params.特殊能力 = Math.floor(d[4] / 4) * 10 + d[6];
+            }
+            return params;
+        }
+
+        // 後読み13桁バーコード解析
+        function calcParameters13Reverse(code) {
+            const d = getDigits(code);
+            let params = { barcode: code, mode: "後読み13桁バーコード" };
+            if (d[13] >= 0 && d[13] <= 4) {
+                params.category = "キャラクター";
+                params.種族 = getSpecies(d[13]);
+                params.職業 = (d[6] <= 6) ? "戦士" : "魔法使い";
+                params.HP = Math.floor(d[12] / 2) * 10000 + d[11] * 1000 + d[10] * 100;
+                params.ST = ([3, 4].includes(d[11]) ? 1 : 0) * 10000 + ((d[11] + 7) % 10) * 1000 + ((d[10] + 5) % 10) * 100;
+                params.DF = ((d[10] + 7) % 10) * 1000 + ((d[9] + 7) % 10) * 100;
+                params.DX = d[11];
+                params.特殊能力 = Math.floor(d[9] / 4) * 10 + d[11];
+            } else {
+                params.category = "アイテム";
+                params.種別 = getItemType_R(d[13]);
+                params.種類 = 0;
+                if (params.種別 === "武器・使い捨て" || params.種別 === "武器") {
+                    let st千;
+                    if ([5, 6, 7, 8].includes(d[11])) st千 = 1;
+                    else if ([9, 0, 1, 2].includes(d[11])) st千 = 2;
+                    else if ([3, 4].includes(d[11])) st千 = 3;
+                    params["STアップ"] = st千 * 1000 + ((d[10] + 5) % 10) * 100;
+                } else if (params.種別 === "防具・使い捨て" || params.種別 === "防具") {
+                    let df千;
+                    if ([3, 4, 5, 6].includes(d[10])) df千 = 0;
+                    else if ([7, 8, 9, 0].includes(d[10])) df千 = 1;
+                    else if ([1, 2].includes(d[10])) df千 = 2;
+                    params["DFアップ"] = df千 * 1000 + ((d[9] + 7) % 10) * 100;
+                } else if (params.種別 === "HPアップ") {
+                    params["HPアップ"] = Math.floor(d[12] / 8) * 10000 + d[11] * 1000 + d[10] * 100;
+                }
+                params.特殊能力 = Math.floor(d[9] / 4) * 10 + d[11];
+            }
+            return params;
+        }
+
+        // 前読み13桁バーコード(通常)解析
+        function calcParameters13ForwardNormal(code) {
+            const d = getDigits(code);
+            let params = { barcode: code, mode: "前読み13桁バーコード(通常)" };
+            if (d[8] >= 0 && d[8] <= 4) {
+                params.category = "キャラクター";
+                params.種族 = getSpecies(d[8]);
+                params.職業 = (d[9] <= 6) ? "戦士" : "魔法使い";
+                params.HP = d[1] * 10000 + d[2] * 1000 + d[3] * 100;
+                params.ST = d[4] * 1000 + d[5] * 100;
+                params.DF = d[6] * 1000 + d[7] * 100;
+                params.DX = d[10];
+                params.特殊能力 = d[11] * 10 + d[12];
+            } else {
+                params.category = "アイテム";
+                params.種別 = getItemType_F(d[8]);
+                params.種類 = d[9];
+                if (params.種別 === "武器・使い捨て" || params.種別 === "武器") {
+                    params["STアップ"] = d[4] * 1000 + d[5] * 100;
+                } else if (params.種別 === "防具・使い捨て" || params.種別 === "防具") {
+                    params["DFアップ"] = d[6] * 1000 + d[7] * 100;
+                } else if (params.種別.indexOf("HPアイテム") !== -1 && d[9] >= 0 && d[9] <= 4) {
+                    params["HPアップ"] = d[1] * 10000 + d[2] * 1000 + d[3] * 100;
+                } else if (params.種別.indexOf("情報アイテム") !== -1 && (d[9] === 5 || d[9] === 6)) {
+                    params.情報アイテム = "有効（C1モードのみ）";
+                } else if (params.種別.indexOf("PPアイテム") !== -1 && d[9] === 7) {
+                    params.PPアップ = d[4] * 10 + d[5];
+                } else if (params.種別.indexOf("MPアイテム") !== -1 && (d[9] === 8 || d[9] === 9)) {
+                    params.MPアップ = d[6] * 10 + d[7];
+                }
+                params.特殊能力 = d[11] * 10 + d[12];
+            }
+            return params;
+        }
+
+        // 前読み13桁バーコード(特殊)解析
+        function calcParameters13ForwardSpecial(code) {
+            const d = getDigits(code);
+            let params = { barcode: code, mode: "前読み13桁バーコード(特殊)" };
+            if (d[8] >= 0 && d[8] <= 4) {
+                params.category = "キャラクター";
+                params.種族 = getSpecies(d[8]);
+                params.職業 = (d[9] <= 6) ? "戦士" : "魔法使い";
+                params.HP = d[1] * 10000 + d[2] * 1000 + d[3] * 100;
+                let st万 = ([0, 2].includes(d[8])) ? 1 : 0;
+                let st千 = d[4], st百 = d[5];
+                params.ST = st万 * 10000 + st千 * 1000 + st百 * 100;
+                let df万 = ([1, 2].includes(d[8])) ? 1 : 0;
+                let df千 = d[6], df百 = d[7];
+                params.DF = df万 * 10000 + df千 * 1000 + df百 * 100;
+                params.DX = d[10];
+                params.特殊能力 = d[11] * 10 + d[12];
+                const num45 = parseInt(code.slice(3, 5));
+                if (d[8] === 0 && [13, 29, 45, 61, 77, 93].includes(num45)) {
+                    df万 = 1;
+                    params.DF = df万 * 10000 + df千 * 1000 + df百 * 100;
+                }
+                if (d[8] === 0 && [14, 30, 46, 62, 78, 94].includes(num45)) {
+                    let internalST = params.ST + 10000;
+                    if (internalST >= 25600) internalST -= 25600;
+                    params.内部ST = internalST;
+                    df万 = 1;
+                    params.DF = df万 * 10000 + df千 * 1000 + df百 * 100;
+                }
+                const num67 = parseInt(code.slice(5, 7));
+                if (d[8] === 1 && [14, 30, 46, 62, 78, 94].includes(num67)) {
+                    st万 = 1;
+                    params.ST = st万 * 10000 + st千 * 1000 + st百 * 100;
+                    let internalDF = params.DF + 10000;
+                    if (internalDF >= 25600) internalDF -= 25600;
+                    params.内部DF = internalDF;
+                }
+            } else {
+                params.category = "アイテム";
+                params.種別 = getItemType_F(d[8]);
+                params.種類 = d[9];
+                if (params.種別 === "武器・使い捨て" || params.種別 === "武器") {
+                    params["STアップ"] = d[4] * 1000 + d[5] * 100;
+                } else if (params.種別 === "防具・使い捨て" || params.種別 === "防具") {
+                    params["DFアップ"] = d[6] * 1000 + d[7] * 100;
+                } else if (params.種別.indexOf("HPアイテム") !== -1 && d[9] >= 0 && d[9] <= 4) {
+                    params["HPアップ"] = d[1] * 10000 + d[2] * 1000 + d[3] * 100;
+                } else if (params.種別.indexOf("情報アイテム") !== -1 && (d[9] === 5 || d[9] === 6)) {
+                    params.情報アイテム = "有効（C1モードのみ）";
+                } else if (params.種別.indexOf("PPアイテム") !== -1 && d[9] === 7) {
+                    params.PPアップ = d[4] * 10 + d[5];
+                } else if (params.種別.indexOf("MPアイテム") !== -1 && (d[9] === 8 || d[9] === 9)) {
+                    params.MPアップ = d[6] * 10 + d[7];
+                }
+                params.特殊能力 = d[11] * 10 + d[12];
+            }
+            return params;
+        }
+
+        // バトルロジック（概念実装）
+        function calcDamage(attacker, defender, options) {
+            const rand = options.rand || [0, 2, 4, 6, 8][Math.floor(Math.random() * 5)];
+            const stBase = attacker.ST * (2 + rand / 10);
+            const divisor = attacker.isCombined ? (options.combinedFactor || 3) : 2;
+            const dfBase = (stBase - defender.DF) / divisor;
+            const damageBase = dfBase * (options.speciesRatio || 1.0) * (options.guardian || 1.0) + 100;
+            return damageBase * (options.timing || 1) * (options.multiplier || 1) * (options.magic || 1) * (options.defense || 1);
+        }
+
+        function calcFirstStrike(DX, speciesRatio, guardian, bonus) {
+            const rand = [0, 2, 4, 6, 8][Math.floor(Math.random() * 5)];
+            let fs = (DX * 5 + rand) * ((speciesRatio || 1.0) + 0.1) * (guardian || 1.0) + (bonus || 0);
+            return fs > 255 ? 255 : fs;
+        }
+
+        function calcHitProbability(DX, HP, speciesRatio, guardian, initHit) {
+            const up = DX * HP / 100 / 83;
+            const hitValue = (initHit || (204 + up)) * (speciesRatio || 1.0) * (guardian || 1.0);
+            if (hitValue > 255) return true;
+            const rand = Math.floor(Math.random() * 256);
+            return hitValue > rand;
+        }
+
+        function calcRecovery(HP, randVal, timing, oppRecovery, selfRecovery) {
+            return HP * randVal * timing / 10 * (oppRecovery || 1) * (selfRecovery || 1);
+        }
+
+        // バーコード処理メイン
+        function processBarcode(code) {
+            let type = classifyBarcode(code);
+            let params = { barcode: code, type: type };
+            if (type === "後読み8桁") {
+                params = Object.assign(params, calcParameters8(code));
+            } else if (type === "後読み13") {
+                params = Object.assign(params, calcParameters13Reverse(code));
+            } else if (type === "前読み13通常") {
+                params = Object.assign(params, calcParameters13ForwardNormal(code));
+            } else if (type === "前読み13特殊") {
+                params = Object.assign(params, calcParameters13ForwardSpecial(code));
+            } else {
+                params.error = "分類できませんでした。";
+            }
+            return params;
+        }
+
+        // UI処理
+        document.getElementById("barcodeForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            const inputField = document.getElementById("barcodeInput");
+            const sanitized = sanitizeInput(inputField.value.trim());
+            if (!/^\d+$/.test(sanitized)) {
+                document.getElementById("result").textContent = "数字のみのバーコードを入力してください。";
+                return;
+            }
+            const resultObj = processBarcode(sanitized);
+            let output = "";
+            for (const key in resultObj) {
+                output += key + " : " + resultObj[key] + "\n";
+            }
+            output += "\n【バトルシミュレーション例】\n";
+            const charA = { ST: resultObj.ST || 5000, DX: resultObj.DX || 5, isCombined: false };
+            const charB = { DF: resultObj.DF || 3000 };
+            const dmg = calcDamage(charA, charB, { rand: 4, timing: 1.5, multiplier: 2, magic: 1, defense: 0.8, speciesRatio: 1.0, guardian: 1.0 });
+            output += "ダメージ : " + Math.floor(dmg) + "\n";
+            const firstStrikeA = calcFirstStrike(charA.DX, 1.0, 1.0, 50);
+            output += "先攻値(キャラA) : " + firstStrikeA + "\n";
+            output += "命中 : " + (calcHitProbability(charA.DX, resultObj.HP || 1000, 1.0, 1.0, 204) ? "命中" : "ミス") + "\n";
+            document.getElementById("result").textContent = output;
+        });
+
+        document.getElementById("resetButton").addEventListener("click", function () {
+            document.getElementById("barcodeInput").value = "";
+            document.getElementById("result").textContent = "";
+        });
+    </script>
+</body>
+
+</html>
